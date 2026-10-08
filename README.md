@@ -35,3 +35,9 @@ To resolve the fixable issue, you need to match the app's bundle ID with your pr
 ## Doing this will break notifications if the app is backgrounded or closed
 
 </details>
+
+<details>
+    <summary>Decrypt IPA Req</summary>
+<a href="https://d.kuku.lu/n6ujhmyej/">Discord IPA</a>
+
+</details>
