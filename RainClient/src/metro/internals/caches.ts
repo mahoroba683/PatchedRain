@@ -4,30 +4,44 @@ import { debounce } from "es-toolkit";
 
 import { ModuleFlags, ModulesMapInternal } from "./enums";
 
-const CACHE_VERSION = 1;
+const CACHE_VERSION = 2;
 const RAIN_METRO_CACHE_PATH = "caches/metro_modules.json";
 
 type ModulesMap = {
     [flag in number | `_${ModulesMapInternal}`]?: ModuleFlags;
 };
 
-let _metroCache = null as unknown as ReturnType<typeof buildInitCache>;
+interface MetroCache {
+    _v: number;
+    _buildNumber: string | number;
+    _modulesCount: number;
+    _assetScanComplete: boolean;
+    flagsIndex: Record<string, number>;
+    findIndex: Record<string, ModulesMap | undefined>;
+    polyfillIndex: Record<string, ModulesMap | undefined>;
+}
+
+let _metroCache = null as unknown as MetroCache;
+let _assetScanPromise: Promise<void> = Promise.resolve();
 
 export const getMetroCache = () => _metroCache;
 
 function buildInitCache() {
-    const cache = {
+    const cache: MetroCache = {
         _v: CACHE_VERSION,
         _buildNumber: NativeClientInfoModule.getConstants().Build,
         _modulesCount: Object.keys(window.modules).length,
-        flagsIndex: {} as Record<string, number>,
-        findIndex: {} as Record<string, ModulesMap | undefined>,
-        polyfillIndex: {} as Record<string, ModulesMap | undefined>
-    } as const;
+        _assetScanComplete: false,
+        flagsIndex: {},
+        findIndex: {},
+        polyfillIndex: {}
+    };
 
     const moduleIds = Object.keys(window.modules);
     const CHUNK_SIZE = 200;
     let index = 0;
+    let completeScan!: () => void;
+    _assetScanPromise = new Promise<void>(resolve => { completeScan = resolve; });
 
     function initChunk(deadline?: { timeRemaining: () => number }) {
         const hasTime = !deadline || deadline.timeRemaining() > 5;
@@ -36,34 +50,37 @@ function buildInitCache() {
         }
         if (index < moduleIds.length) {
             setTimeout(initChunk, 0);
+            return;
         }
+
+        cache._assetScanComplete = true;
+        Promise.resolve(saveCache.flush?.()).then(completeScan, completeScan);
     }
-    setTimeout(initChunk, 20);
 
     _metroCache = cache;
+    setTimeout(initChunk, 20);
     return cache;
 }
 
 /** @internal */
 export async function initMetroCache() {
-    if (!await fileExists(RAIN_METRO_CACHE_PATH)) return void buildInitCache();
+    if (!await fileExists(RAIN_METRO_CACHE_PATH)) {
+        buildInitCache();
+        await _assetScanPromise;
+        return;
+    }
+
     const rawCache = await readFile(RAIN_METRO_CACHE_PATH);
     try {
-        _metroCache = JSON.parse(rawCache);
-        if (_metroCache._v !== CACHE_VERSION) {
-            _metroCache = null!;
-            throw "cache invalidated; cache version outdated";
-        }
-        if (_metroCache._buildNumber !== NativeClientInfoModule.getConstants().Build) {
-            _metroCache = null!;
-            throw "cache invalidated; version mismatch";
-        }
-        if (_metroCache._modulesCount !== Object.keys(window.modules).length) {
-            _metroCache = null!;
-            throw "cache invalidated; modules count mismatch";
-        }
+        _metroCache = JSON.parse(rawCache) as MetroCache;
+        if (_metroCache._v !== CACHE_VERSION) throw new Error("cache version mismatch");
+        if (_metroCache._buildNumber !== NativeClientInfoModule.getConstants().Build) throw new Error("build mismatch");
+        if (_metroCache._modulesCount !== Object.keys(window.modules).length) throw new Error("module count mismatch");
+        const hasAssetModules = Object.values(_metroCache.flagsIndex).some(flags => flags & ModuleFlags.ASSET);
+        if (!_metroCache._assetScanComplete || !hasAssetModules) throw new Error("asset scan incomplete");
     } catch {
         buildInitCache();
+        await _assetScanPromise;
     }
 }
 
@@ -93,6 +110,7 @@ export function indexBlacklistFlag(id: number) {
 /** @internal */
 export function indexAssetModuleFlag(id: number) {
     _metroCache.flagsIndex[id] |= ModuleFlags.ASSET;
+    saveCache();
 }
 
 /** @internal */

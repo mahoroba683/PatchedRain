@@ -13,7 +13,7 @@ async function initializeRain() {
         Object.freeze = Object.seal = Object;
 
         if (globalThis.__RAIN_STARTUP_DIAG__) globalThis.__RAIN_STARTUP_DIAG__.phase = "native-environment";
-        prepareNativeEnvironment();
+        await prepareNativeEnvironment();
         if (globalThis.__RAIN_STARTUP_DIAG__) globalThis.__RAIN_STARTUP_DIAG__.phase = "metro-cache";
         await require("@metro/internals/caches").initMetroCache();
         installStartupBoundary();

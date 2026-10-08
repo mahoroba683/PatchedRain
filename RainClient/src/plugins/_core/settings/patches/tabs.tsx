@@ -1,8 +1,10 @@
 import { after } from "@api/patcher";
 import { useSettings } from "@api/settings";
+import { findAssetId } from "@api/assets";
 import { TableRow } from "@metro/common/components";
 import { findByPropsLazy } from "@metro/wrappers";
 import React from "react";
+import { Image } from "react-native";
 
 import { registeredSections } from "..";
 import { CustomPageRenderer, wrapOnPress } from "./shared";
@@ -15,8 +17,14 @@ export function patchTabsUI(unpatches: (() => void | boolean)[]) {
         .flatMap(sect => sect.map(row => ({
             [row.key]: {
                 type: "pressable",
-                icon: row.icon,
-                IconComponent: () => <TableRow.Icon source={row.icon} />,
+                icon: row.iconName ? findAssetId(row.iconName) : row.icon,
+                IconComponent: () => {
+                    const icon = row.iconName ? findAssetId(row.iconName) : row.icon;
+                    if (icon && typeof icon === "object" && "uri" in icon && typeof icon.uri === "string") {
+                        return <Image source={icon} style={{ width: 24, height: 24 }} resizeMode="contain" />;
+                    }
+                    return <TableRow.Icon source={icon} />;
+                },
                 usePredicate: row.usePredicate,
                 useTrailing: row.useTrailing,
                 useTitle: row.title,

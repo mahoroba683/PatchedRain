@@ -47,31 +47,31 @@ function initSettings() {
             {
                 key: "RAIN_PLUGINS",
                 title: () => Strings.PLUGINS,
-                icon: findAssetId("PuzzlePieceIcon"),
+                iconName: "PuzzlePieceIcon",
                 render: () => import("@rain/pages/Plugins"),
             },
             {
                 key: "RAIN_THEMES",
                 title: () => Strings.THEMES,
-                icon: findAssetId("PaintPaletteIcon"),
+                iconName: "PaintPaletteIcon",
                 render: () => import("@rain/pages/Themes"),
             },
             {
                 key: "RAIN_FONTS",
                 title: () => Strings.FONTS,
-                icon: findAssetId("LettersIcon"),
+                iconName: "LettersIcon",
                 render: () => import("@rain/pages/Fonts"),
             },
             {
                 key: "RAIN_CLOUDSYNC",
                 title: () => "Cloud Sync",
-                icon: findAssetId("CloudIcon"),
+                iconName: "CloudIcon",
                 render: () => import("@rain/pages/CloudSync"),
             },
             {
                 key: "RAIN_DEVELOPER",
                 title: () => Strings.DEVELOPER,
-                icon: findAssetId("WrenchIcon"),
+                iconName: "WrenchIcon",
                 render: () => import("@rain/pages/Developer"),
                 usePredicate: () => {
                     const developerSettings = useSettings(state => state.developerSettings);
@@ -88,6 +88,7 @@ export interface RowConfig {
     onPress?: () => any;
     render?: Parameters<typeof lazy>[0];
     icon?: ImageURISource | number;
+    iconName?: string;
     IconComponent?: React.ReactNode,
     usePredicate?: () => boolean,
     useTrailing?: () => string | React.ReactNode,
