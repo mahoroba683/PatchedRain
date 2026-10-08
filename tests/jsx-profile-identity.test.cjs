@@ -1,0 +1,15 @@
+const assert=require('node:assert/strict'),fs=require('node:fs'),vm=require('node:vm');
+const {stripTypeScriptTypes}=require('node:module');
+let source=stripTypeScriptTypes(fs.readFileSync('RainClient/src/api/react/jsx.ts','utf8'));
+source=source.replace(/^import .*;\n/gm,'').replace(/^export /gm,'');
+const hooks={},ctx={findByPropsLazy:()=>({}),after:(key,object,callback)=>{hooks[key]=callback;return ()=>delete hooks[key];},globalThis:{}};
+vm.createContext(ctx);vm.runInContext(source,ctx);
+const original=function anonymous(){},sameName=function anonymous(){};
+let calls=0;const off=ctx.onJsxCreateType(original,(type,ret)=>{assert.equal(type,original);calls++;return {...ret,type:'ProfileWrapper'};});ctx.patchJsx();
+const node=Object.freeze({type:original,props:Object.freeze({user:{id:'42'}}),key:'profile'});
+assert.equal(hooks.jsx([original],node).type,'ProfileWrapper');
+assert.equal(hooks.jsxs([original],node).props,node.props);
+assert.equal(node.type,original);
+assert.equal(hooks.jsx([sameName],{type:sameName}),undefined);
+off();assert.equal(hooks.jsx([original],node),undefined);assert.equal(calls,2);
+console.log('PASS: captured component identity intercepted; frozen original, unrelated same-name component, cleanup preserved');

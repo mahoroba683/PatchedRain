@@ -1,0 +1,5 @@
+const fs=require('fs'),vm=require('vm'),assert=require('assert/strict');
+let source=fs.readFileSync('Sources/legacy-rounded-ui.js','utf8').replace('  function propsFor(t,p) {','  g.recordTest=recordMessage;\n  function propsFor(t,p) {');const c={};vm.createContext(c);vm.runInContext(source,c);
+const ast={locale:null,ast:[[1,'private-value'],{type:1,value:'private-value'},'Send']};c.recordTest([ast],'View',0);c.recordTest(ast,'View',0);assert.equal(c.__RAIN_RENDER_DIAG__.messages.length,1);assert.equal(c.__RAIN_RENDER_DIAG__.messageCount,2);assert.equal(c.__RAIN_RENDER_DIAG__.messages[0].localeType,'object');assert(!JSON.stringify(c.__RAIN_RENDER_DIAG__).includes('private-value'));assert.equal(ast.ast[2],'Send');console.log('PASS: bounded diagnostic, dedup, null locale/packed tuples, no argument values, original data untouched');
+
+c.recordTest({$$typeof:Symbol.for('react.element'),props:{children:{$$typeof:Symbol.for('react.element'),props:{children:ast}}}},'cached-tree',0);assert.equal(c.__RAIN_RENDER_DIAG__.messages.length,2);assert.equal(c.__RAIN_RENDER_DIAG__.messages[1].component,'cached-tree');console.log('PASS: cached nested React child trees observed');

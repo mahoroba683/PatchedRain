@@ -1,0 +1,12 @@
+import assert from 'node:assert/strict';
+import {createNativePublisher} from '../RainClient/src/plugins/platformindicators/nativeBridge.js';
+import {userPlatforms} from '../RainClient/src/plugins/platformindicators/presence.js';
+const calls=[];let statuses={desktop:'dnd',mobile:'online',web:'offline',unknown:'online'};
+const p=createNativePublisher((...args)=>{calls.push(args);return 'queued';},()=>statuses);
+p.publish('42');assert.equal(calls.length,0);p.enable(true);p.publish('42');
+assert.deepEqual(JSON.parse(calls[1][1]),{userId:'42',statuses:{desktop:'dnd',mobile:'online'}});
+p.publish('42');assert.equal(calls.length,2);statuses={desktop:'idle'};p.refresh();assert.equal(calls.length,3);
+p.enable(false);p.publish('42');assert.equal(calls.length,4);assert.deepEqual(calls[3],['enable','0']);
+const missing=createNativePublisher(undefined,()=>({}));missing.enable(true);missing.publish('42');missing.refresh();
+assert.deepEqual(userPlatforms('self',{UserStore:{getCurrentUser:()=>({id:'self'})},SessionsStore:{getSessions:()=>null},PresenceStore:{getClientStatus:()=>({mobile:'online'})}}),{mobile:'online'});
+console.log('PASS: native bridge status filtering, deduplication, live refresh, disable, missing bridge and session fallback');

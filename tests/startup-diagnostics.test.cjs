@@ -1,0 +1,12 @@
+const fs=require('node:fs'),vm=require('node:vm'),assert=require('node:assert/strict');
+const source=fs.readFileSync(require('node:path').join(__dirname,'../Sources/startup-diagnostics.js'),'utf8');
+const saved=[],originalCalls=[];let handler=(...args)=>originalCalls.push(args);
+const ctx={console:{error:(...args)=>originalCalls.push(args)},ErrorUtils:{getGlobalHandler:()=>handler,setGlobalHandler:h=>handler=h},__RAIN_BRIDGE_CALL_SYNC__:p=>saved.push(p)};
+vm.createContext(ctx);vm.runInContext(source,ctx);
+const failure={message:'Cannot convert undefined value to object',stack:'TypeError: Cannot convert undefined value to object\n at actualCrash (rain:111:22)'};
+ctx.console.error(failure);assert.equal(saved.length,1);assert.equal(originalCalls.length,1);
+const payload=JSON.parse(saved[0].rain.args[0]);assert.equal(saved[0].rain.method,'startup.capture');assert.match(payload.errors[0].detail,/actualCrash/);
+handler(failure,true);assert.equal(saved.length,2);assert.equal(originalCalls.length,2);
+assert.equal(ctx.__RAIN_STARTUP_DIAG__.errors.length,2);
+vm.runInContext(source,ctx);ctx.console.error(failure);assert.equal(saved.length,3);
+console.log('PASS: pre-Rain capture keeps stack, forwards original console/global handler, bridge payload correct, no duplicate installation');

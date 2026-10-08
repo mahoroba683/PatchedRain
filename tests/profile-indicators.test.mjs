@@ -1,0 +1,11 @@
+import assert from 'node:assert/strict';
+import {installProfileIndicators} from '../RainClient/src/plugins/platformindicators/profilePatch.js';
+const callbacks=new Map();let undos=0;
+const after=(key,target,callback)=>{assert.equal(typeof target?.[key],'function');callbacks.set(target,callback);return()=>undos++;};
+const profile={type(){}};const tree={props:{children:[]}};
+const stop=installProfileIndicators(profile,after,()=>undefined,id=>({key:'UserProfileIcons',userId:id}));
+assert.doesNotThrow(()=>callbacks.get(profile)([],tree));assert.equal(callbacks.size,1);assert.deepEqual(tree,{props:{children:[]}});
+stop();assert.equal(undos,1);
+assert.doesNotThrow(()=>installProfileIndicators(undefined,after,()=>undefined,()=>{}));
+assert.equal(callbacks.size,1);
+console.log('PASS: actual missing-PrimaryInfo failure leaves native tree untouched, no undefined patch targets, cleanup preserved');

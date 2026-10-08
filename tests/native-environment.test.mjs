@@ -1,0 +1,15 @@
+import assert from 'node:assert/strict';
+import fs from 'node:fs';
+import {prepareNativeEnvironment} from '../RainClient/src/metro/nativeEnvironment.js';
+const order=[];
+const root={__RAIN_DISCORD_INFO__:{version:'348.0',build:'113691'},__RAIN_STARTUP_DIAG__:{},modules:{13676:{__filePath:'polyfillsNative.tsx'}},__r:id=>{assert.equal(id,13676);order.push('native-polyfills');root.location={protocol:'https:',host:'discord.com'};}};
+const initializeCache=()=>{order.push('metro-cache');return root.location.protocol;};
+assert.throws(()=>initializeCache(),TypeError);order.length=0;
+assert.equal(prepareNativeEnvironment(root),true);assert.equal(initializeCache(),'https:');
+assert.deepEqual(order,['native-polyfills','metro-cache']);assert.equal(root.__RAIN_STARTUP_DIAG__.nativeEnvironment,true);
+const location=root.location;prepareNativeEnvironment(root);assert.equal(root.location,location);assert.equal(order.length,2);
+assert.equal(prepareNativeEnvironment({...root,location:undefined,__RAIN_DISCORD_INFO__:{version:'349.0',build:'113691'}}),false);
+assert.throws(()=>prepareNativeEnvironment({...root,location:undefined,modules:{13676:{__filePath:'wrong.tsx'}}}),/initializer unavailable/);
+const entry=fs.readFileSync(new URL('../RainClient/src/entry.ts',import.meta.url),'utf8');
+assert(entry.indexOf('prepareNativeEnvironment();')<entry.indexOf('await require("@metro/internals/caches").initMetroCache()'));
+console.log('PASS: missing-location startup reproduced, native initializer precedes cache, existing environment retained, wrong build/path rejected');

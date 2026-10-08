@@ -1,0 +1,41 @@
+{
+  "name": "rain",
+  "private": true,
+  "author": {
+    "name": "cocobo1",
+    "url": "https://cocobo1.dev"
+  },
+  "scripts": {
+    "build": "node scripts/build.mjs",
+    "serve": "node scripts/serve.mjs",
+    "lint": "eslint ./src --fix"
+  },
+  "license": "BSD-3-Clause",
+  "devDependencies": {
+    "@swc/core": "1.16.2",
+    "@swc/helpers": "0.5.23",
+    "esbuild": "0.27.7",
+    "esbuild-plugin-globals": "0.2.0",
+    "hermes-compiler": "250829098.0.15",
+    "yargs-parser": "22.0.0"
+  },
+  "dependencies": {
+    "@gullerya/object-observer": "6.1.4",
+    "@tanstack/react-query": "5.102.8",
+    "es-toolkit": "1.52.0",
+    "fuzzysort": "3.1.0",
+    "intl-messageformat": "11.2.15",
+    "moment": "2.30.1",
+    "react-devtools": "7.0.1",
+    "react-native": "0.84.1",
+    "react-native-image-picker": "8.2.1",
+    "react-native-reanimated": "4.6.0",
+    "sublimation": "1.0.0",
+    "zustand": "5.0.15"
+  },
+  "trustedDependencies": [
+    "@swc/core",
+    "electron",
+    "esbuild"
+  ]
+}
