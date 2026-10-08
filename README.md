@@ -36,8 +36,4 @@ To resolve the fixable issue, you need to match the app's bundle ID with your pr
 
 </details>
 
-<details>
-    <summary>Decrypt IPA Req</summary>
-<a href="https://d.kuku.lu/n6ujhmyej/">Discord IPA</a>
 
-</details>
